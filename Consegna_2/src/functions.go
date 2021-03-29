@@ -1,5 +1,11 @@
 package fn
 
+import (
+	"fmt"
+	"math/rand"
+	"time"
+)
+
 //Piatto contiene il nome del piatto
 type Piatto struct {
 	Nome string
@@ -7,72 +13,69 @@ type Piatto struct {
 
 //Cameriere contiene il nome del cameriere e il piatto che sta trasportando
 type Cameriere struct {
-	Nome      string
-	Trasporto Piatto
-}
-
-func Ordina(p Piatto, to_do chan Piatto) {
-
-}
-
-func Cucina() {
-
-}
-
-func Consegna() {
-
-}
-
-/*
-//Viaggio contiene il nome della meta e uno slice contenente i clienti
-type Viaggio struct{
-	Meta string
-	Prenotati []Cliente
-	Minimum int
-}
-
-
-//NewViaggio crea un nuovo viaggio a partire
-func NewViaggio(_meta string, _minimum int)(Viaggio){
-	return Viaggio{
-		Meta: _meta,
-		Prenotati: make([]Cliente,0),
-		Minimum: _minimum,
-	}
-}
-
-
-
-//Cliente è una struttura contenente i dati di un determinato cliente
-type Cliente struct{
 	Nome string
+}
+
+func Ordina(p Piatto, orders chan Piatto) {
+	orders <- p
+}
+
+//Cucina manda in cottura i piatti ordinati. La cottura di ogni piatto impiega tra i 4 e i 6 secondi
+func Cucina(orders chan Piatto, cooked chan Piatto) {
+	gasLock := make(chan bool, 3) //channel per il lock dei fornelli
+
+	gasLock <- true
+	gasLock <- true
+	gasLock <- true
+
+	for plate := range orders {
+		go func(p Piatto) { //funzione che effettua la cottura del piatto ordinato passato come parametro se ci sono fornelli disponibili
+			<-gasLock
+			fmt.Println("Il piatto", p, "sta venendo cucinato")
+			time.Sleep(time.Second * time.Duration(rand.Intn(3)+4))
+			fmt.Println("Il piatto", p, "ha terminato la cottura")
+			gasLock <- true
+			cooked <- p
+		}(plate)
+	}
 
 }
 
-//Prenota effettua una prenotazione
-func Prenota(c Cliente, v1 chan Viaggio, v2 chan Viaggio, wg *sync.WaitGroup){
+//Consegna definisce tre camerieri e gestisce la consegna (in tre secondi) dei piatti nel channel passato per parametro. Termina se non viene consegnato un piatto da più di 15 secondi dato che tempo di cottura più consegna è inferiore
+func Consegna(cooked chan Piatto) {
+	waiters := make(chan Cameriere, 2) //definizione dei camerieri
+	waiters <- Cameriere{Nome: "Stanlio"}
+	waiters <- Cameriere{Nome: "Ollio"}
 
-	if rand.Intn(2) == 0{
-		aux := <- v1
-		aux.Prenotati = append(aux.Prenotati, c)
-		v1 <- aux
-	}else{
-		aux := <- v2
-		aux.Prenotati = append(aux.Prenotati, c)
-		v2 <- aux
+	for {
+		select {
+		case p := <-cooked: //se ci sono piatti da consegnare allora un cameriere se libero lo porta
+			go func(p Piatto) { //funzione che gestisce la consegna in parallelo
+				w := <-waiters
+				fmt.Println("Il piatto", p, "sta venendo consegnato da", w.Nome)
+				time.Sleep(time.Second * 3)
+				fmt.Println("Il piatto", p, "è stato consegnato da", w.Nome)
+				waiters <- w
+			}(p)
+
+		case <-time.After(15 * time.Second):
+			return
+		}
+
 	}
-	wg.Done()
 
 }
 
-//StampaPartecipanti stampa i viaggi prenotati e i clienti che parteciperanno
-func StampaPartecipanti(v1 Viaggio, v2 Viaggio){
-	if len(v1.Prenotati) >= v1.Minimum{
-		fmt.Println("Il viaggio per la", v1.Meta, "partirà con", v1.Prenotati)
-	}
-	if len(v2.Prenotati) >= v2.Minimum{
-		fmt.Println("Il viaggio per la", v2.Meta, "partirà con", v2.Prenotati)
+//Timer è una funzione che stampa il tempo ogni secondo (lanciare con go)
+func Timer() {
+	start := time.Now()      //tempo inizio programma
+	prev := time.Duration(0) //valore di tempo precedente
+	fmt.Println(prev)
+	for {
+		now := time.Since(start).Truncate(time.Second) //effettua la differenza tra il tempo attuale e quello di inzio troncando ai secondi
+		if now > prev {                                //se è passato un secondo allora stampa e aggiorna prev
+			prev = now
+			fmt.Println("Sono passati", now)
+		}
 	}
 }
-
-*/

@@ -1,44 +1,32 @@
 package main
 
 import (
-	"consegna_2/src"
+	fn "consegna_2/src"
 	"math/rand"
-	"sync"
 	"time"
 )
 
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	clients := [10] string{"Anna","Barbara","Cinzia","Debora","Elena","Filippo","Giorgia","Hilbert","Jaqueline","Kevin"}
-/*
-	v1 := make(chan fn.Viaggio,1)
-	v1 <- fn.Viaggio{
-		Meta: "Spagna",
-		Prenotati: make([]fn.Cliente,0),
-		Minimum: 4,
+	piatti := []string{"Anatra", "Broccoletti", "Calzone", "Daino", "Eclairs", "Fondue", "Gelato", "Humus", "Insalata", "Linguine"}
+
+	orders := make(chan fn.Piatto, 10)
+	cooked := make(chan fn.Piatto, 10)
+
+	//funzione che stampa il tempo ogni secondo
+	go fn.Timer()
+
+	//ordinazione di tutti i piatti disponibili
+	for i := range piatti {
+		fn.Ordina(fn.Piatto{Nome: piatti[i]}, orders)
 	}
+	close(orders)
 
-	v2 := make(chan fn.Viaggio,1)
-	v2 <- fn.Viaggio{
-		Meta: "Francia",
-		Prenotati: make([]fn.Cliente,0),
-		Minimum: 2,
-	}
+	//invio in cottura dei piatti
+	go fn.Cucina(orders, cooked)
 
-	var wg sync.WaitGroup
-	
-
-	wg.Add(7)
-
-	for i := 0; i<7; i++{
-		cl := fn.Cliente{Nome: clients[i]}
-		go fn.Prenota(cl, v1, v2, &wg)
-	}
-
-	wg.Wait()
-	
-	fn.StampaPartecipanti(<-v1,<-v2)
-	*/
+	//consegna dei piatti
+	fn.Consegna(cooked)
 
 }
