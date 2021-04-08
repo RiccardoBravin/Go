@@ -1,7 +1,7 @@
 package main
 
 import (
-	"consegna_2/src"
+	"consegna_3/src"
 	"math/rand"
 	"sync"
 	"time"
