@@ -7,19 +7,24 @@ import (
 	"time"
 )
 
+//struttura contenente il nome dell'operaio
 type Operaio struct {
 	Nome string
 }
 
+//struttura martello
 type Martello struct {
 }
 
+//struttura cacciavite
 type Cacciavite struct {
 }
 
+//struttura trapano
 type Trapano struct {
 }
 
+//Opera gestisce il lavoro dell'operaio
 func Opera(o Operaio, m chan Martello, c chan Cacciavite, t chan Trapano, wg *sync.WaitGroup) {
 
 	select {
@@ -27,7 +32,7 @@ func Opera(o Operaio, m chan Martello, c chan Cacciavite, t chan Trapano, wg *sy
 		obj1.use(o)
 		t <- obj1
 
-		select { //ho preso il trapano quindi vedo cosa posso prendere tra cacciavire e martello e completo con l'ultimo di conseguenza
+		select { //ho preso il trapano quindi vedo cosa posso prendere tra cacciavite e martello e completo con l'ultimo di conseguenza
 		case obj1 := <-c: //prendo un cacciavite (t,c, )
 			obj1.use(o)
 			c <- obj1
@@ -68,6 +73,8 @@ func Opera(o Operaio, m chan Martello, c chan Cacciavite, t chan Trapano, wg *sy
 }
 
 //non trovo un modo per scrivere un unica funzione use, esiste?
+
+//use stampa su console l'oggetto in uso
 func (obj *Martello) use(o Operaio) {
 	fmt.Println("L'operaio", o.Nome, "ha preso il martello")
 	time.Sleep(time.Second * time.Duration(rand.Intn(2)+1))
@@ -86,6 +93,8 @@ func (obj *Trapano) use(o Operaio) {
 	fmt.Println("L'operaio", o.Nome, "ha terminato di usare il trapano")
 }
 
+
+//Timer scandisce i secondi
 func Timer() {
 	start := time.Now()
 	prev := time.Duration(0)

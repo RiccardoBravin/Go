@@ -15,6 +15,8 @@ func main() {
 
 	nomi := [] string{"Aldo","Giovanni","Giacomo"}
 
+
+	//creazione e deposito degli strumenti
 	martelli := make(chan fn.Martello, 1)
 	martelli <- fn.Martello{}
 
@@ -24,6 +26,8 @@ func main() {
 	
 	cacciaviti := make(chan fn.Cacciavite, 1)
 	cacciaviti <- fn.Cacciavite{}
+
+
 
 	var wg sync.WaitGroup //waitgroup per gli operai
 
